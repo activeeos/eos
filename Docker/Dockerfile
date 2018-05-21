@@ -1,4 +1,4 @@
-FROM golang:1.10.2-stretch
+FROM golang:1.10.2-stretch as nodeos-monitor
 RUN go get -u github.com/activeeos/nodeos-monitor/cmd/nodeos-monitor
 
 FROM eosio/builder as builder
@@ -12,7 +12,7 @@ RUN git clone -b $branch https://github.com/EOSIO/eos.git --recursive \
 
 FROM ubuntu:18.04
 
-COPY --from=0 /go/bin/nodeos-monitor /opt/eosio/bin/.
+COPY --from=nodeos-monitor /go/bin/nodeos-monitor /opt/eosio/bin/.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install openssl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 COPY --from=builder /tmp/build/bin /opt/eosio/bin
