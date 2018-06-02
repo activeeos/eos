@@ -1,13 +1,15 @@
+FROM golang:1.10.2-stretch as nodeos-monitor
+RUN go get -u github.com/activeeos/nodeos-monitor/cmd/nodeos-monitor
+
 FROM eosio/builder as builder
-ARG branch=master
-ARG symbol=SYS
+ARG branch=v1.0.0
+ARG symbol=EOS
 
 RUN git clone -b $branch https://github.com/EOSIO/eos.git --recursive \
     && cd eos && echo "$branch:$(git rev-parse HEAD)" > /etc/eosio-version \
     && cmake -H. -B"/tmp/build" -GNinja -DCMAKE_BUILD_TYPE=Release -DWASM_ROOT=/opt/wasm -DCMAKE_CXX_COMPILER=clang++ \
        -DCMAKE_C_COMPILER=clang -DCMAKE_INSTALL_PREFIX=/tmp/build  -DSecp256k1_ROOT_DIR=/usr/local -DBUILD_MONGO_DB_PLUGIN=true -DCORE_SYMBOL_NAME=$symbol \
     && cmake --build /tmp/build --target install && rm /tmp/build/bin/eosiocpp
-
 
 FROM ubuntu:18.04
 
@@ -18,6 +20,7 @@ COPY --from=builder /tmp/build/contracts /contracts
 COPY --from=builder /eos/Docker/config.ini /
 COPY --from=builder /etc/eosio-version /etc
 COPY --from=builder /eos/Docker/nodeosd.sh /opt/eosio/bin/nodeosd.sh
+COPY --from=nodeos-monitor /go/bin/nodeos-monitor /opt/eosio/bin/
 ENV EOSIO_ROOT=/opt/eosio
 RUN chmod +x /opt/eosio/bin/nodeosd.sh
 ENV LD_LIBRARY_PATH /usr/local/lib
