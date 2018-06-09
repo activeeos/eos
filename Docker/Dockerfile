@@ -2,7 +2,7 @@ FROM golang:1.10.2-stretch as nodeos-monitor
 RUN go get -u github.com/activeeos/nodeos-monitor/cmd/nodeos-monitor
 
 FROM eosio/builder as builder
-ARG branch=v1.0.2.2
+ARG branch=mainnet-1.0.2.2
 ARG symbol=EOS
 
 RUN git clone -b $branch https://github.com/EOS-Mainnet/eos.git --recursive \
